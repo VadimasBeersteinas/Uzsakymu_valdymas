@@ -1,13 +1,13 @@
 import streamlit as st
 import pandas as pd
 
-# GitHub failo nuoroda
-LIKUCIAI_URL = "https://github.com/VadimasBeersteinas/Uzsakymu_valdymas/raw/refs/heads/main/liku%C4%8Diai.xlsx"
+# GitHub CSV failo nuoroda
+LIKUCIAI_URL = "https://github.com/VadimasBeersteinas/Uzsakymu_valdymas/blob/main/likučiai.csv"
 
-# Nuskaitome prekių likučius
+# Nuskaitome prekių likučius iš CSV
 try:
-    df = pd.read_excel(LIKUCIAI_URL, usecols=["I17_kiekis", "P_pav"])
-    df.columns = ["Kiekis", "Prekė"]
+    df = pd.read_csv(LIKUCIAI_URL)
+    df.columns = ["Kiekis", "Prekė"]  # Užtikriname teisingus stulpelių pavadinimus
 except Exception as e:
     st.error("❌ Klaida nuskaitant failą iš GitHub! Įsitikinkite, kad nuoroda teisinga.")
 
