@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # GitHub CSV failo nuoroda
-LIKUCIAI_URL = "https://github.com/VadimasBeersteinas/Uzsakymu_valdymas/blob/main/likučiai.csv"
+LIKUCIAI_URL = "https://raw.githubusercontent.com/VadimasBeersteinas/Uzsakymu_valdymas/main/likučiai.csv"
 
 # Nuskaitome prekių likučius iš CSV
 try:
