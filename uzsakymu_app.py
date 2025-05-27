@@ -1,15 +1,24 @@
 import streamlit as st
 import pandas as pd
+import requests
+import tempfile
 
 # GitHub CSV failo nuoroda
 LIKUCIAI_URL = "https://raw.githubusercontent.com/VadimasBeersteinas/Uzsakymu_valdymas/main/likučiai.csv"
 
-# Nuskaitome prekių likučius iš CSV
+# Atsisiunčiame failą į laikiną vietą ir nuskaitome jį
 try:
-    df = pd.read_csv(LIKUCIAI_URL)
+    response = requests.get(LIKUCIAI_URL)
+    response.raise_for_status()  # Patikrina, ar atsisiuntimas buvo sėkmingas
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as temp_file:
+        temp_file.write(response.content)
+        temp_path = temp_file.name
+
+    df = pd.read_csv(temp_path)
     df.columns = ["Kiekis", "Prekė"]  # Užtikriname teisingus stulpelių pavadinimus
 except Exception as e:
-    st.error("❌ Klaida nuskaitant failą iš GitHub! Įsitikinkite, kad nuoroda teisinga.")
+    st.error("❌ Klaida nuskaitant failą iš GitHub! Patikrinkite, ar nuoroda teisinga.")
 
 # Streamlit UI
 st.title("📦 Užsakymų sistema")
