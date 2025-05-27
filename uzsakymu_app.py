@@ -4,7 +4,7 @@ import requests
 import tempfile
 
 # GitHub CSV failo nuoroda
-LIKUCIAI_URL = "https://raw.githubusercontent.com/VadimasBeersteinas/Uzsakymu_valdymas/main/likučiai.csv"
+LIKUCIAI_URL = "https://github.com/VadimasBeersteinas/Uzsakymu_valdymas/blob/main/likučiai.csv"
 
 # Atsisiunčiame failą į laikiną vietą ir nuskaitome jį
 try:
