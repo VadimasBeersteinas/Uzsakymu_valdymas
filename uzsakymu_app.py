@@ -1,16 +1,15 @@
 import streamlit as st
 import pandas as pd
 
-# Failų keliai (Dropbox aplanke tavo kompiuteryje)
-LIKUCIAI_PATH = r"C:\Users\DOC\Dropbox\likučiai.xlsx"
-UZSAKYMAI_PATH = r"C:\Users\DOC\Dropbox\užsakymai.xlsx"
+# GitHub failo nuoroda
+LIKUCIAI_URL = "https://github.com/VadimasBeersteinas/Uzsakymu_valdymas/raw/refs/heads/main/liku%C4%8Diai.xlsx"
 
 # Nuskaitome prekių likučius
 try:
-    df = pd.read_excel(LIKUCIAI_PATH, usecols=["I17_kiekis      ", "P_pav                                                                                                                   "])
+    df = pd.read_excel(LIKUCIAI_URL, usecols=["I17_kiekis", "P_pav"])
     df.columns = ["Kiekis", "Prekė"]
-except FileNotFoundError:
-    st.error("Failas 'likučiai.xlsx' nerastas. Įsitikinkite, kad kelias teisingas!")
+except Exception as e:
+    st.error("❌ Klaida nuskaitant failą iš GitHub! Įsitikinkite, kad nuoroda teisinga.")
 
 # Streamlit UI
 st.title("📦 Užsakymų sistema")
@@ -36,15 +35,7 @@ if st.session_state.orders:
 
 # Mygtukas pateikti užsakymą
 if st.button("✅ Pateikti užsakymą"):
-    try:
-        uzsakymai_df = pd.read_excel(UZSAKYMAI_PATH)
-    except FileNotFoundError:
-        uzsakymai_df = pd.DataFrame(columns=["Prekė", "Kiekis"])
-
-    # Pridedame užsakytas prekes
-    uzsakymai_df = pd.concat([uzsakymai_df, pd.DataFrame(st.session_state.orders)], ignore_index=True)
-    uzsakymai_df.to_excel(UZSAKYMAI_PATH, index=False)
-
-    st.success("✅ Užsakymas pateiktas!")
+    st.subheader("✅ Užsakymas pateiktas!")
+    st.write("Toliau pateiktos užsakytos prekės:")
+    st.table(pd.DataFrame(st.session_state.orders))
     st.session_state.orders = []  # Išvalome sąrašą po užsakymo
-
