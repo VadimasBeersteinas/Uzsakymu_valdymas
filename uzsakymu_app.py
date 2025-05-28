@@ -68,7 +68,7 @@ def send_order_via_email(order_list):
         server.send_message(msg)
 
 def main():
-    # CSS bloko atnaujinimas: pašalinami borderiai ir iš "šalinti" mygtuko spalva pakeičiama į juodą.
+    # CSS stiliaus blokas: pašaliname borderius, pritaikome padding ir centruojame mygtuką "-" 
     st.markdown("""
     <style>
     .order-cell {
@@ -83,6 +83,11 @@ def main():
       margin: 0;
       text-align: center;
       color: black; 
+    }
+    /* Center the button inside its container */
+    .order-cell.button button {
+      display: block;
+      margin: 0 auto;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -111,13 +116,13 @@ def main():
         
         if st.session_state.orders:
             st.subheader("Užsakytų prekių sąrašas")
-            # Antraštės eilutė
+            # Lentelės antraštės
             header_cols = st.columns([5, 2, 1])
             header_cols[0].markdown("<div class='order-cell'><b>Prekė</b></div>", unsafe_allow_html=True)
             header_cols[1].markdown("<div class='order-cell'><b>Kiekis</b></div>", unsafe_allow_html=True)
             header_cols[2].markdown("<div class='order-cell button'><b>Šalinti</b></div>", unsafe_allow_html=True)
             
-            # Eilučių rodymas
+            # Duomenų eilučių rodymas
             for idx, order in enumerate(st.session_state.orders):
                 row_cols = st.columns([5, 2, 1])
                 row_cols[0].markdown(f"<div class='order-cell'>{order['Prekė']}</div>", unsafe_allow_html=True)
@@ -131,7 +136,7 @@ def main():
             try:
                 send_order_via_email(st.session_state.orders)
                 st.success("Užsakymas sėkmingai išsiųstas į el. paštą!")
-                st.session_state.orders = []  # Išvalome užsakymų sąrašą
+                st.session_state.orders = []  # Išvalome sąrašo įrašus
             except Exception as e:
                 st.error(f"❌ Užsakymo išsiuntimas nepavyko: {e}")
     else:
