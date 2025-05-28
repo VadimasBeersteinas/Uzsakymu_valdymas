@@ -3,14 +3,14 @@ import pandas as pd
 import requests
 from io import BytesIO
 
-# Dropbox Excel failo nuoroda
+# Dropbox Excel failo nuoroda (būtina "Direct Link" versija)
 LIKUCIAI_URL = "https://dl.dropboxusercontent.com/scl/fi/82mr72rih8bqjz33tm1he/liku-iai.xlsx?rlkey=wh7tsy06woxbmuurt9hw3b6s2&st=j1qhh1ac&dl=0"
 
-# Bendras prisijungimo vartotojas
+# Prisijungimo duomenys
 USERNAME = "MANIGA"
 PASSWORD = "Maniga_sirpučių"
 
-# Prisijungimo funkcija su sesijos atnaujinimu
+# Autentifikacija
 def login():
     st.title("🔒 Prisijungimas")
     username = st.text_input("Vartotojo vardas")
@@ -19,9 +19,9 @@ def login():
     if st.button("✅ Prisijungti"):
         if username == USERNAME and password == PASSWORD:
             st.session_state.authenticated = True
-            st.experimental_rerun()  # Pakeitimas: automatiškai atnaujina sesiją
+            st.rerun()  # Automatiškai atnaujina sesiją
         else:
-            st.error("❌ Neteisingas prisijungimo vardas arba slaptažodis!")
+            st.error("❌ Neteisingas vartotojo vardas arba slaptažodis!")
 
 # Tikriname, ar vartotojas prisijungęs
 if "authenticated" not in st.session_state or not st.session_state.authenticated:
