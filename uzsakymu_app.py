@@ -10,8 +10,8 @@ from email.message import EmailMessage
 SMTP_SERVER = "smtp.gmail.com"                       
 SMTP_PORT = 587                                      
 SENDER_EMAIL = "uzsakymaisandeliui@gmail.com"        
-SENDER_PASSWORD = "yffbskojzdldkdxa"  # jūsų sugeneruotas App Password
-RECIPIENT_EMAIL = "vadimas.beersteinas@gmail.com"    # gavėjo el. pašto adresas
+SENDER_PASSWORD = "yffbskojzdldkdxa"  # Jūsų sugeneruotas App Password
+RECIPIENT_EMAIL = "vadimas.beersteinas@gmail.com"    # Naujas gavėjo el. pašto adresas
 # ------------------------------------------------------------------
 
 # Dropbox Excel failo nuoroda (Direct Link)
@@ -24,7 +24,6 @@ LIKUCIAI_URL = (
 USERNAME = "MANIGA"
 PASSWORD = "Maniga_sirpučių"
 
-# Prisijungimo funkcija
 def login():
     st.title("🔒 Prisijungimas")
     username = st.text_input("Vartotojo vardas")
@@ -32,11 +31,10 @@ def login():
     if st.button("✅ Prisijungti"):
         if username == USERNAME and password == PASSWORD:
             st.session_state.authenticated = True
-            st.rerun()  # Perkrauna puslapį, kad įsigaliuotų nauja būsena
+            st.rerun()  # Perkrauna puslapį su nauja būsena
         else:
             st.error("❌ Neteisingas vartotojo vardas arba slaptažodis!")
 
-# Duomenų nuskaitymo funkcija su naujuoju caching dekoratoriumi
 @st.cache_data
 def load_data(url):
     try:
@@ -55,7 +53,6 @@ def load_data(url):
         st.error(f"❌ Klaida nuskaitant failą: {e}")
         return pd.DataFrame(columns=["Kiekis", "Prekė"])
 
-# Funkcija, siunčianti užsakymo sąrašą el. paštu
 def send_order_via_email(order_list):
     message_content = "Naujas užsakymas:\n\n"
     for order in order_list:
@@ -71,7 +68,28 @@ def send_order_via_email(order_list):
         server.send_message(msg)
 
 def main():
-    # Viršutinį header'į formuojame su dviem stulpeliais.
+    # Įterpiame CSS stilių lentelės užlapiui, kad ląstelės turėtų borderius ir mažesnį padding
+    st.markdown("""
+    <style>
+    .order-cell {
+      border: 1px solid #ccc;
+      padding: 5px;
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .order-cell.button {
+      border: 1px solid #ccc;
+      padding: 5px;
+      margin: 0;
+      text-align: center;
+      color: red;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Header su pavadinimu kairėje ir atsijungimo mygtuku dešinėje
     col_header_left, col_header_right = st.columns([8, 2])
     with col_header_left:
         st.title("📦 Užsakymų sistema")
@@ -79,24 +97,8 @@ def main():
         if st.button("🚪 Atsijungti", key="logout"):
             st.session_state.pop("authenticated")
             st.rerun()
-    
-    # Įterpiame CSS išskirtiniam raudonam šalintuvo mygtukui
-    st.markdown(
-        """
-        <style>
-        .remove-btn button {
-            background-color: transparent;
-            color: red;
-            border: none;
-            font-size: 16px;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-    
+
     df = load_data(LIKUCIAI_URL)
-    
     if "Prekė" in df.columns and not df.empty:
         if "orders" not in st.session_state:
             st.session_state.orders = []
@@ -109,38 +111,29 @@ def main():
             st.session_state.orders.append({"Prekė": selected_product, "Kiekis": qty})
             st.success(f"Pridėta: {selected_product} – {qty} vnt.")
         
-        # Užsakymų sąrašą rodome lentelės pavidalu
         if st.session_state.orders:
             st.subheader("Užsakytų prekių sąrašas")
-            # Antraštės eilutė
-            header_col1, header_col2, header_col3 = st.columns([5, 2, 1])
-            header_col1.write("Prekė")
-            header_col2.write("Kiekis")
-            header_col3.write("Šalinti")
+            # Lentelės antraštės
+            header_cols = st.columns([5, 2, 1])
+            header_cols[0].markdown("<div class='order-cell'><b>Prekė</b></div>", unsafe_allow_html=True)
+            header_cols[1].markdown("<div class='order-cell'><b>Kiekis</b></div>", unsafe_allow_html=True)
+            header_cols[2].markdown("<div class='order-cell button'><b>Šalinti</b></div>", unsafe_allow_html=True)
             
-            # Eilučių atvaizdavimas
+            # Eilučių su duomenimis rodymas
             for idx, order in enumerate(st.session_state.orders):
-                row_col1, row_col2, row_col3 = st.columns([5, 2, 1])
-                # Uždeda CSS stilių, kad tekstas nepersikelia į kelias eilutes (naudojama ellipsis)
-                row_col1.markdown(
-                    f"<p style='white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{order['Prekė']}</p>",
-                    unsafe_allow_html=True,
-                )
-                row_col2.write(f"{order['Kiekis']} vnt.")
-                with row_col3:
-                    # Apgaubiamas šalintuvo mygtukas į <div> su klase 'remove-btn'
-                    st.markdown("<div class='remove-btn'>", unsafe_allow_html=True)
+                row_cols = st.columns([5, 2, 1])
+                row_cols[0].markdown(f"<div class='order-cell'>{order['Prekė']}</div>", unsafe_allow_html=True)
+                row_cols[1].markdown(f"<div class='order-cell'>{order['Kiekis']} vnt.</div>", unsafe_allow_html=True)
+                with row_cols[2]:
                     if st.button("–", key=f"remove_{idx}"):
                         st.session_state.orders.pop(idx)
                         st.rerun()
-                    st.markdown("</div>", unsafe_allow_html=True)
         
-        # Užsakymo pateikimo mygtukas: po sėkmingo siuntimo rodoma tik pranešimo žinutė
         if st.button("✅ Pateikti užsakymą"):
             try:
                 send_order_via_email(st.session_state.orders)
                 st.success("Užsakymas sėkmingai išsiųstas į el. paštą!")
-                st.session_state.orders = []  # Išvalome sąrašą
+                st.session_state.orders = []  # Išvalome sąrašo įrašus
             except Exception as e:
                 st.error(f"❌ Užsakymo išsiuntimas nepavyko: {e}")
     else:
