@@ -10,8 +10,8 @@ from email.message import EmailMessage
 SMTP_SERVER = "smtp.gmail.com"                       
 SMTP_PORT = 587                                      
 SENDER_EMAIL = "uzsakymaisandeliui@gmail.com"        
-SENDER_PASSWORD = "yffbskojzdldkdxa"  # Jūsų sugeneruotas App Password
-RECIPIENT_EMAIL = "vadimas.beersteinas@gmail.com"    # Naujas gavėjo el. pašto adresas
+SENDER_PASSWORD = "yffbskojzdldkdxa"  # Saugiai saugokite slaptažodį!
+RECIPIENT_EMAIL = "vadimas.beersteinas@gmail.com"    
 # ------------------------------------------------------------------
 
 # Dropbox Excel failo nuoroda (Direct Link)
@@ -20,7 +20,7 @@ LIKUCIAI_URL = (
     "rlkey=wh7tsy06woxbmuurt9hw3b6s2&st=j1qhh1ac&dl=0"
 )
 
-# Prisijungimo duomenys (vienas bendras vartotojas)
+# Prisijungimo duomenys
 USERNAME = "MANIGA"
 PASSWORD = "Maniga_sirpučių"
 
@@ -31,7 +31,7 @@ def login():
     if st.button("✅ Prisijungti"):
         if username == USERNAME and password == PASSWORD:
             st.session_state.authenticated = True
-            st.rerun()  # Perkrauna puslapį su nauja būsena
+            st.rerun()
         else:
             st.error("❌ Neteisingas vartotojo vardas arba slaptažodis!")
 
@@ -53,22 +53,23 @@ def load_data(url):
         st.error(f"❌ Klaida nuskaitant failą: {e}")
         return pd.DataFrame(columns=["Kiekis", "Prekė"])
 
-def send_order_via_email(order_list):
-    message_content = "Naujas užsakymas:\n\n"
+def send_order_via_email(order_list, from_location, to_location):
+    message_content = f"Naujas užsakymas:\n\nIš objekto: {from_location}\nĮ objektą: {to_location}\n\n"
     for order in order_list:
         message_content += f"Prekė: {order['Prekė']} | Kiekis: {order['Kiekis']} vnt.\n"
+
     msg = EmailMessage()
     msg.set_content(message_content)
     msg["Subject"] = "Naujas užsakymas"
     msg["From"] = SENDER_EMAIL
     msg["To"] = RECIPIENT_EMAIL
+
     with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-        server.starttls()  # Užšifruotas ryšys
+        server.starttls()
         server.login(SENDER_EMAIL, SENDER_PASSWORD)
         server.send_message(msg)
 
 def main():
-    # CSS bloko atnaujinimas: pašalinami borderiai ir iš "šalinti" mygtuko spalva pakeičiama į juodą.
     st.markdown("""
     <style>
     .order-cell {
@@ -87,12 +88,11 @@ def main():
     </style>
     """, unsafe_allow_html=True)
 
-    # Header su pavadinimu kairėje ir atsijungimo mygtuku dešinėje
     col_header_left, col_header_right = st.columns([8, 2])
     with col_header_left:
         st.title("📦 Užsakymų sistema")
     with col_header_right:
-        if st.button("🚪 Atsijungti", key="logout"):
+        if st.button("🚪 Atsijungti"):
             st.session_state.pop("authenticated")
             st.rerun()
 
@@ -108,16 +108,18 @@ def main():
         if st.button("➕ Pridėti"):
             st.session_state.orders.append({"Prekė": selected_product, "Kiekis": qty})
             st.success(f"Pridėta: {selected_product} – {qty} vnt.")
-        
+
+        st.subheader("Papildoma informacija")
+        from_location = st.text_input("Iš objekto")
+        to_location = st.text_input("Į objektą")
+
         if st.session_state.orders:
             st.subheader("Užsakytų prekių sąrašas")
-            # Antraštės eilutė
             header_cols = st.columns([5, 2, 1])
             header_cols[0].markdown("<div class='order-cell'><b>Prekė</b></div>", unsafe_allow_html=True)
             header_cols[1].markdown("<div class='order-cell'><b>Kiekis</b></div>", unsafe_allow_html=True)
             header_cols[2].markdown("<div class='order-cell button'><b>Šalinti</b></div>", unsafe_allow_html=True)
-            
-            # Eilučių rodymas
+
             for idx, order in enumerate(st.session_state.orders):
                 row_cols = st.columns([5, 2, 1])
                 row_cols[0].markdown(f"<div class='order-cell'>{order['Prekė']}</div>", unsafe_allow_html=True)
@@ -126,12 +128,12 @@ def main():
                     if st.button("–", key=f"remove_{idx}"):
                         st.session_state.orders.pop(idx)
                         st.rerun()
-        
+
         if st.button("✅ Pateikti užsakymą"):
             try:
-                send_order_via_email(st.session_state.orders)
+                send_order_via_email(st.session_state.orders, from_location, to_location)
                 st.success("Užsakymas sėkmingai išsiųstas į el. paštą!")
-                st.session_state.orders = []  # Išvalome užsakymų sąrašą
+                st.session_state.orders = []
             except Exception as e:
                 st.error(f"❌ Užsakymo išsiuntimas nepavyko: {e}")
     else:
