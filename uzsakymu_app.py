@@ -136,17 +136,17 @@ def main():
         if st.button("✅ Pateikti užsakymą"):
             try:
                 send_order_via_email(st.session_state.orders, from_location, to_location, notes)
-                st.success("Užsakymas sėkmingai pateiktas")
-                
-                # Išvalome visus laukelius
                 st.session_state.orders = []
                 st.session_state["from_location"] = ""
                 st.session_state["to_location"] = ""
                 st.session_state["notes"] = ""
-                
-                st.rerun()  # Perkrauna puslapį, kad išvalytų viską
+
+                st.success("Užsakymas sėkmingai pateiktas")
+                st.rerun()
+
             except Exception as e:
                 st.error(f"❌ Užsakymo išsiuntimas nepavyko: {e}")
+
     else:
         st.error("⚠️ Faile 'likučiai.xlsx' nėra tinkamų duomenų arba jis nepavyko nuskaityti.")
 
