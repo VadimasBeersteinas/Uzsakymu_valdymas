@@ -19,9 +19,9 @@ def login():
     if st.button("✅ Prisijungti"):
         if username == USERNAME and password == PASSWORD:
             st.session_state.authenticated = True
-            st.rerun()  # Automatinis puslapio perkrovimas, kad būtų įkelta nauja būsena
+            st.rerun()  # Perkrauna puslapį, kad įsigaliuotų autentifikacijos būsena
         else:
-            st.error("❌ Neteisingas prisijungimo vardas arba slaptažodis!")
+            st.error("❌ Neteisingas vartotojo vardas arba slaptažodis!")
 
 # Duomenų nuskaitymo funkcija su naujuoju caching dekoratoriumi
 @st.cache_data
@@ -32,9 +32,11 @@ def load_data(url):
             st.error(f"❌ Nepavyko atsisiųsti failo. HTTP kodas: {response.status_code}")
             return pd.DataFrame(columns=["Kiekis", "Prekė"])
         
-        df = pd.read_excel(BytesIO(response.content),
-                           engine='openpyxl',
-                           usecols=["I17_kiekis      ", "P_pav                                                                                                                   "])
+        df = pd.read_excel(
+            BytesIO(response.content),
+            engine='openpyxl',
+            usecols=["I17_kiekis      ", "P_pav                                                                                                                   "]
+        )
         df.columns = ["Kiekis", "Prekė"]
         return df
     except Exception as e:
@@ -46,14 +48,31 @@ def main():
     df = load_data(LIKUCIAI_URL)
 
     if 'Prekė' in df.columns and not df.empty:
+        # Inicializuojame užsakymų sąrašą, jei dar nėra
+        if "orders" not in st.session_state:
+            st.session_state.orders = []
+
+        st.subheader("Pridėti prekę į užsakymą")
         pasirinkta_prekė = st.selectbox("Pasirinkite prekę", df["Prekė"])
         max_kiekis = int(df[df["Prekė"] == pasirinkta_prekė]["Kiekis"].values[0])
-        kiekis = st.number_input("Įveskite kiekį", min_value=1, max_value=max_kiekis)
+        kiekis = st.number_input("Įveskite kiekį", min_value=1, max_value=max_kiekis, value=1)
 
+        # Mygtukas prekių pridėjimui
+        if st.button("➕ Pridėti"):
+            st.session_state.orders.append({"Prekė": pasirinkta_prekė, "Kiekis": kiekis})
+            st.success(f"Pridėta: {pasirinkta_prekė} – {kiekis} vnt.")
+
+        # Jei nors viena prekė užsakyta – rodyti dabartinį užsakymų sąrašą
+        if st.session_state.orders:
+            st.subheader("Užsakytų prekių sąrašas")
+            st.table(pd.DataFrame(st.session_state.orders))
+
+        # Užsakymo pateikimo mygtukas
         if st.button("✅ Pateikti užsakymą"):
             st.subheader("✅ Užsakymas pateiktas!")
-            st.write(f"Prekė: **{pasirinkta_prekė}**")
-            st.write(f"Kiekis: **{kiekis} vnt.**")
+            st.table(pd.DataFrame(st.session_state.orders))
+            # Galite, jei reikia, išvalyti užsakymų sąrašą po pateikimo:
+            # st.session_state.orders = []
     else:
         st.error("⚠️ Faile 'likučiai.xlsx' nėra tinkamų duomenų arba jis nepavyko nuskaityti.")
 
