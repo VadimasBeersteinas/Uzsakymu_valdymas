@@ -97,12 +97,12 @@ def main():
     st.subheader("🏢 Objektai")
     col1, col2 = st.columns(2)
     with col1:
-        from_location = st.text_input("Iš objekto", max_chars=50)
+        from_location = st.text_input("Iš objekto", max_chars=50, value=st.session_state.get("from_location", ""))
     with col2:
-        to_location = st.text_input("Į objektą", max_chars=50)
+        to_location = st.text_input("Į objektą", max_chars=50, value=st.session_state.get("to_location", ""))
 
     st.subheader("📝 Pastabos")
-    notes = st.text_area("Įveskite pastabas", max_chars=200)
+    notes = st.text_area("Įveskite pastabas", max_chars=200, value=st.session_state.get("notes", ""))
 
     df = load_data(LIKUCIAI_URL)
     if "Prekė" in df.columns and not df.empty:
@@ -136,8 +136,14 @@ def main():
         if st.button("✅ Pateikti užsakymą"):
             try:
                 send_order_via_email(st.session_state.orders, from_location, to_location, notes)
-                st.success("Užsakymas sėkmingai išsiųstas į el. paštą!")
+                st.success("Užsakymas sėkmingai pateiktas")
+                
+                # Išvalome visus laukelius
                 st.session_state.orders = []
+                st.session_state["from_location"] = ""
+                st.session_state["to_location"] = ""
+                st.session_state["notes"] = ""
+                
             except Exception as e:
                 st.error(f"❌ Užsakymo išsiuntimas nepavyko: {e}")
     else:
