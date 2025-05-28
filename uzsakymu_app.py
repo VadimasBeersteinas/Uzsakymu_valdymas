@@ -1,41 +1,41 @@
 import streamlit as st
 import pandas as pd
+import requests
+from io import BytesIO
 
-# Dropbox Excel failo nuoroda (pakeisk savo failo linką!)
-LIKUCIAI_URL = "https://dl.dropboxusercontent.com/scl/fi/82mr72rih8bqjz33tm1he/liku-iai.xlsx?rlkey=wh7tsy06woxbmuurt9hw3b6s2&st=j1qhh1ac&dl=0"
+# Dropbox Excel failo nuoroda (pakeisk į savo „direct link“!)
+LIKUCIU_URL = "https://dl.dropboxusercontent.com/scl/fi/82mr72rih8bqjz33tm1he/liku-iai.xlsx?rlkey=wh7tsy06woxbmuurt9hw3b6s2&st=j1qhh1ac&dl=0"
 
-@st.cache_data
 def load_data(url):
-    """ Nuskaito Excel failą iš Dropbox """
+    """ Atsisiunčia Excel failą iš Dropbox ir apdoroja duomenis """
     try:
-        df = pd.read_excel(url, engine='openpyxl')
-        df.columns = ["Prekė", "Kiekis"]
+        response = requests.get(url)
+        if response.status_code != 200:
+            st.error(f"❌ Nepavyko atsisiųsti failo. Statusas: {response.status_code}")
+            return pd.DataFrame(columns=["Kiekis", "Prekė"])
+        
+        df = pd.read_excel(BytesIO(response.content), engine='openpyxl', usecols=["I17_kiekis      ", "P_pav                                                                                                                   "])
+        df.columns = ["Kiekis", "Prekė"]
         return df
     except Exception as e:
         st.error(f"❌ Klaida nuskaitant failą: {e}")
-        return pd.DataFrame(columns=["Prekė", "Kiekis"])
+        return pd.DataFrame(columns=["Kiekis", "Prekė"])
 
-# Nuskaitome duomenis iš Dropbox
-df = load_data(LIKUCIAI_URL)
+# Nuskaitome duomenis
+df = load_data(LIKUCIU_URL)
 
 # Streamlit UI
 st.title("📦 Užsakymų sistema")
 
-if df.empty:
-    st.warning("⚠️ Duomenų lentelė tuščia arba nepavyko nuskaityti failo!")
+if 'Prekė' in df.columns and not df.empty:
+    pasirinkta_prekė = st.selectbox("Pasirinkite prekę", df["Prekė"])
+    max_kiekis = int(df[df["Prekė"] == pasirinkta_prekė]["Kiekis"].values[0])
+    kiekis = st.number_input("Įveskite kiekį", min_value=1, max_value=max_kiekis)
+
+    if st.button("✅ Pateikti užsakymą"):
+        st.subheader("✅ Užsakymas pateiktas!")
+        st.write(f"Prekė: **{pasirinkta_prekė}**")
+        st.write(f"Kiekis: **{kiekis} vnt.**")
+
 else:
-    selected_item = st.selectbox("Pasirinkite prekę", df["Prekė"].tolist())
-    max_kiekis = int(df[df["Prekė"] == selected_item]["Kiekis"].values[0])
-    selected_kiekis = st.number_input("Įveskite kiekį", min_value=1, max_value=max_kiekis)
-
-    # Užsakymų saugojimas sesijoje
-    if "orders" not in st.session_state:
-        st.session_state.orders = []
-
-    if st.button("➕ Pridėti"):
-        st.session_state.orders.append({"Prekė": selected_item, "Kiekis": selected_kiekis})
-        st.success(f"{selected_item} ({selected_kiekis} vnt.) pridėta!")
-
-    if st.session_state.orders:
-        st.subheader("📋 Užsakytų prekių sąrašas")
-        st.table(pd.DataFrame(st.session_state.orders))
+    st.error("⚠️ Faile 'likučiai.xlsx' nėra tinkamų duomenų arba jis nepavyko nuskaityti.")
