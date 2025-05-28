@@ -3,14 +3,14 @@ import pandas as pd
 import requests
 from io import BytesIO
 
-# Dropbox Excel failo nuoroda (būtina "Direct Link" versija)
+# Dropbox Excel failo nuoroda (Direct Link)
 LIKUCIAI_URL = "https://dl.dropboxusercontent.com/scl/fi/82mr72rih8bqjz33tm1he/liku-iai.xlsx?rlkey=wh7tsy06woxbmuurt9hw3b6s2&st=j1qhh1ac&dl=0"
 
 # Prisijungimo duomenys
 USERNAME = "MANIGA"
 PASSWORD = "Maniga_sirpučių"
 
-# Autentifikacija
+# Prisijungimo funkcija
 def login():
     st.title("🔒 Prisijungimas")
     username = st.text_input("Vartotojo vardas")
@@ -19,29 +19,31 @@ def login():
     if st.button("✅ Prisijungti"):
         if username == USERNAME and password == PASSWORD:
             st.session_state.authenticated = True
-            st.rerun()  # Automatiškai atnaujina sesiją
+            st.rerun()  # Pakeičia `st.experimental_rerun()`
         else:
-            st.error("❌ Neteisingas vartotojo vardas arba slaptažodis!")
+            st.error("❌ Neteisingas prisijungimo vardas arba slaptažodis!")
+
+# Duomenų nuskaitymas iš Dropbox
+@st.cache_data
+def load_data(url):
+    try:
+        response = requests.get(url)
+        if response.status_code != 200:
+            st.error(f"❌ Nepavyko atsisiųsti failo. HTTP kodas: {response.status_code}")
+            return pd.DataFrame(columns=["Kiekis", "Prekė"])
+
+        df = pd.read_excel(BytesIO(response.content), engine='openpyxl', usecols=["I17_kiekis      ", "P_pav                                                                                                                   "])
+        df.columns = ["Kiekis", "Prekė"]
+        return df
+    except Exception as e:
+        st.error(f"❌ Klaida nuskaitant failą: {e}")
+        return pd.DataFrame(columns=["Kiekis", "Prekė"])
 
 # Tikriname, ar vartotojas prisijungęs
 if "authenticated" not in st.session_state or not st.session_state.authenticated:
     login()
 else:
     st.title("📦 Užsakymų sistema")
-
-    def load_data(url):
-        try:
-            response = requests.get(url)
-            if response.status_code != 200:
-                st.error(f"❌ Nepavyko atsisiųsti failo. Statusas: {response.status_code}")
-                return pd.DataFrame(columns=["Kiekis", "Prekė"])
-
-            df = pd.read_excel(BytesIO(response.content), engine='openpyxl', usecols=["I17_kiekis      ", "P_pav                                                                                                                   "])
-            df.columns = ["Kiekis", "Prekė"]
-            return df
-        except Exception as e:
-            st.error(f"❌ Klaida nuskaitant failą: {e}")
-            return pd.DataFrame(columns=["Kiekis", "Prekė"])
 
     df = load_data(LIKUCIU_URL)
 
