@@ -95,8 +95,11 @@ def main():
             st.rerun()
 
     st.subheader("🏢 Objektai")
-    from_location = st.text_input("Iš objekto", max_chars=50)
-    to_location = st.text_input("Į objektą", max_chars=50)
+    col1, col2 = st.columns(2)
+    with col1:
+        from_location = st.text_input("Iš objekto", max_chars=50)
+    with col2:
+        to_location = st.text_input("Į objektą", max_chars=50)
 
     df = load_data(LIKUCIAI_URL)
     if "Prekė" in df.columns and not df.empty:
