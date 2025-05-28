@@ -51,8 +51,8 @@ def load_data(url):
         st.error(f"❌ Klaida nuskaitant failą: {e}")
         return pd.DataFrame(columns=["Kiekis", "Prekė"])
 
-def send_order_via_email(order_list, from_location, to_location):
-    message_content = f"Naujas užsakymas:\n\nIš objekto: {from_location}\nĮ objektą: {to_location}\n\n"
+def send_order_via_email(order_list, from_location, to_location, notes):
+    message_content = f"Naujas užsakymas:\n\nIš objekto: {from_location}\nĮ objektą: {to_location}\nPastabos: {notes}\n\n"
     for order in order_list:
         message_content += f"Prekė: {order['Prekė']} | Kiekis: {order['Kiekis']} vnt.\n"
 
@@ -101,6 +101,9 @@ def main():
     with col2:
         to_location = st.text_input("Į objektą", max_chars=50)
 
+    st.subheader("📝 Pastabos")
+    notes = st.text_area("Įveskite pastabas", max_chars=200)
+
     df = load_data(LIKUCIAI_URL)
     if "Prekė" in df.columns and not df.empty:
         if "orders" not in st.session_state:
@@ -132,7 +135,7 @@ def main():
 
         if st.button("✅ Pateikti užsakymą"):
             try:
-                send_order_via_email(st.session_state.orders, from_location, to_location)
+                send_order_via_email(st.session_state.orders, from_location, to_location, notes)
                 st.success("Užsakymas sėkmingai išsiųstas į el. paštą!")
                 st.session_state.orders = []
             except Exception as e:
