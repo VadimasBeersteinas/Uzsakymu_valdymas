@@ -68,11 +68,10 @@ def send_order_via_email(order_list):
         server.send_message(msg)
 
 def main():
-    # Įterpiame CSS stilių lentelės užlapiui, kad ląstelės turėtų borderius ir mažesnį padding
+    # CSS bloko atnaujinimas: pašalinami borderiai ir iš "šalinti" mygtuko spalva pakeičiama į juodą.
     st.markdown("""
     <style>
     .order-cell {
-      border: 1px solid #ccc;
       padding: 5px;
       margin: 0;
       white-space: nowrap;
@@ -80,11 +79,10 @@ def main():
       text-overflow: ellipsis;
     }
     .order-cell.button {
-      border: 1px solid #ccc;
       padding: 5px;
       margin: 0;
       text-align: center;
-      color: red;
+      color: black; 
     }
     </style>
     """, unsafe_allow_html=True)
@@ -113,13 +111,13 @@ def main():
         
         if st.session_state.orders:
             st.subheader("Užsakytų prekių sąrašas")
-            # Lentelės antraštės
+            # Antraštės eilutė
             header_cols = st.columns([5, 2, 1])
             header_cols[0].markdown("<div class='order-cell'><b>Prekė</b></div>", unsafe_allow_html=True)
             header_cols[1].markdown("<div class='order-cell'><b>Kiekis</b></div>", unsafe_allow_html=True)
             header_cols[2].markdown("<div class='order-cell button'><b>Šalinti</b></div>", unsafe_allow_html=True)
             
-            # Eilučių su duomenimis rodymas
+            # Eilučių rodymas
             for idx, order in enumerate(st.session_state.orders):
                 row_cols = st.columns([5, 2, 1])
                 row_cols[0].markdown(f"<div class='order-cell'>{order['Prekė']}</div>", unsafe_allow_html=True)
@@ -133,7 +131,7 @@ def main():
             try:
                 send_order_via_email(st.session_state.orders)
                 st.success("Užsakymas sėkmingai išsiųstas į el. paštą!")
-                st.session_state.orders = []  # Išvalome sąrašo įrašus
+                st.session_state.orders = []  # Išvalome užsakymų sąrašą
             except Exception as e:
                 st.error(f"❌ Užsakymo išsiuntimas nepavyko: {e}")
     else:
