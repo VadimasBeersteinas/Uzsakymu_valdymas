@@ -1,41 +1,18 @@
 import streamlit as st
 import pandas as pd
-import requests
 
-# GitHub CSV failo nuoroda
-LIKUCIAI_URL = "https://raw.githubusercontent.com/VadimasBeersteinas/Uzsakymu_valdymas/main/likučiai.csv"
-
-def check_url(url):
-    """ Patikriname, ar failas egzistuoja GitHub. """
-    response = requests.get(url)
-    if response.status_code != 200:
-        st.error(f"❌ Nepavyko pasiekti CSV failo. HTTP statusas: {response.status_code}")
-        return False
-    return True
+# GitHub Excel failo nuoroda
+LIKUCIAI_URL = "https://github.com/VadimasBeersteinas/Uzsakymu_valdymas/raw/main/likučiai.xlsx"
 
 @st.cache_data
 def load_data(url):
-    """ Nuskaito ir apdoroja CSV failą, pritaikant skyriklį ir kodavimą. """
-    if not check_url(url):
-        return pd.DataFrame(columns=["Kiekis", "Prekė"])
-    
+    """ Nuskaito Excel failą ir apdoroja duomenis. """
     try:
-        # Bandome įvairius nustatymus nuskaitymui
-        for encoding in ["utf-8", "utf-8-sig", "ISO-8859-1"]:
-            for sep in [",", ";", "\t"]:
-                try:
-                    df = pd.read_csv(url, encoding=encoding, sep=sep)
-                    if df.shape[1] == 2:  # Patikriname, ar yra tik 2 stulpeliai
-                        df.columns = ["Kiekis", "Prekė"]
-                        return df
-                except Exception:
-                    pass
-        
-        st.error("❌ Nepavyko tinkamai nuskaityti CSV failo. Patikrinkite skyriklį ir kodavimą.")
-        return pd.DataFrame(columns=["Kiekis", "Prekė"])
-    
+        df = pd.read_excel(url, engine='openpyxl')  # Naudojame `openpyxl`, kad būtų suderinamas su `.xlsx`
+        df.columns = ["Kiekis", "Prekė"]  # Užtikriname teisingus stulpelių pavadinimus
+        return df
     except Exception as e:
-        st.error(f"❌ Klaida nuskaitant failą: {e}")
+        st.error(f"❌ Klaida nuskaitant Excel failą: {e}")
         return pd.DataFrame(columns=["Kiekis", "Prekė"])
 
 # Nuskaitome prekių likučius
