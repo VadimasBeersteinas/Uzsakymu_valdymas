@@ -7,11 +7,11 @@ from email.message import EmailMessage
 
 # ------------------------------------------------------------------
 # El. pašto siuntimo konfigūracija – saugiai išsaugokite šiuos duomenis!
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
-SENDER_EMAIL = "uzsakymaisandeliui@gmail.com"
+SMTP_SERVER = "smtp.gmail.com"                       
+SMTP_PORT = 587                                      
+SENDER_EMAIL = "uzsakymaisandeliui@gmail.com"        
 SENDER_PASSWORD = "yffbskojzdldkdxa"  # Jūsų sugeneruotas App Password
-RECIPIENT_EMAIL = "vadimas.beersteinas@gmail.com"  # Naujas gavėjo el. pašto adresas
+RECIPIENT_EMAIL = "vadimas.beersteinas@gmail.com"    # Naujas gavėjo el. pašto adresas
 # ------------------------------------------------------------------
 
 # Dropbox Excel failo nuoroda (Direct Link)
@@ -68,7 +68,7 @@ def send_order_via_email(order_list):
         server.send_message(msg)
 
 def main():
-    # Minimalus CSS – tik nustatomas padding ir teksto elipsis ląstelėms
+    # CSS bloko atnaujinimas: pašalinami borderiai ir iš "šalinti" mygtuko spalva pakeičiama į juodą.
     st.markdown("""
     <style>
     .order-cell {
@@ -78,10 +78,16 @@ def main():
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    .order-cell.button {
+      padding: 5px;
+      margin: 0;
+      text-align: center;
+      color: black; 
+    }
     </style>
     """, unsafe_allow_html=True)
 
-    # Header: pavadinimas kairėje, atsijungimo mygtukas dešinėje
+    # Header su pavadinimu kairėje ir atsijungimo mygtuku dešinėje
     col_header_left, col_header_right = st.columns([8, 2])
     with col_header_left:
         st.title("📦 Užsakymų sistema")
@@ -105,24 +111,21 @@ def main():
         
         if st.session_state.orders:
             st.subheader("Užsakytų prekių sąrašas")
-            # Lentelės antraštės: panaudojame paprastą HTML, kad tekstas būtų centruotas
+            # Antraštės eilutė
             header_cols = st.columns([5, 2, 1])
-            header_cols[0].markdown("<p style='padding: 5px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'><b>Prekė</b></p>", unsafe_allow_html=True)
-            header_cols[1].markdown("<p style='padding: 5px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'><b>Kiekis</b></p>", unsafe_allow_html=True)
-            header_cols[2].markdown("<p style='text-align: center; padding: 5px; margin: 0;'><b>Šalinti</b></p>", unsafe_allow_html=True)
+            header_cols[0].markdown("<div class='order-cell'><b>Prekė</b></div>", unsafe_allow_html=True)
+            header_cols[1].markdown("<div class='order-cell'><b>Kiekis</b></div>", unsafe_allow_html=True)
+            header_cols[2].markdown("<div class='order-cell button'><b>Šalinti</b></div>", unsafe_allow_html=True)
             
-            # Eilučių su duomenimis rodymas
+            # Eilučių rodymas
             for idx, order in enumerate(st.session_state.orders):
                 row_cols = st.columns([5, 2, 1])
-                row_cols[0].markdown(f"<p class='order-cell'>{order['Prekė']}</p>", unsafe_allow_html=True)
-                row_cols[1].markdown(f"<p class='order-cell'>{order['Kiekis']} vnt.</p>", unsafe_allow_html=True)
+                row_cols[0].markdown(f"<div class='order-cell'>{order['Prekė']}</div>", unsafe_allow_html=True)
+                row_cols[1].markdown(f"<div class='order-cell'>{order['Kiekis']} vnt.</div>", unsafe_allow_html=True)
                 with row_cols[2]:
-                    # Centruojame mygtuką "-" naudojant HTML paragrafą
-                    st.markdown("<p style='text-align: center; margin: 0;'>", unsafe_allow_html=True)
                     if st.button("–", key=f"remove_{idx}"):
                         st.session_state.orders.pop(idx)
                         st.rerun()
-                    st.markdown("</p>", unsafe_allow_html=True)
         
         if st.button("✅ Pateikti užsakymą"):
             try:
