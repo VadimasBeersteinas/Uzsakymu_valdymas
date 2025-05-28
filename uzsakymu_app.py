@@ -10,7 +10,7 @@ from email.message import EmailMessage
 SMTP_SERVER = "smtp.gmail.com"                       # Gmail SMTP serveris
 SMTP_PORT = 587                                      # TLS prievadas
 SENDER_EMAIL = "uzsakymaisandeliui@gmail.com"        # Siuntėjo el. pašto adresas
-SENDER_PASSWORD = "Sirpuciu34_2025-05-28"           # Įrašykite čia programos slaptažodį (app password)
+SENDER_PASSWORD = "yffbskojzdldkdxa"           # Įrašykite čia programos slaptažodį (app password)
 RECIPIENT_EMAIL = "vadimas.beersteinas@gmail.com"     # Gavėjo el. pašto adresas  
 # ------------------------------------------------------------------
 
