@@ -19,12 +19,12 @@ def login():
     if st.button("✅ Prisijungti"):
         if username == USERNAME and password == PASSWORD:
             st.session_state.authenticated = True
-            st.rerun()  # Automatinis puslapio perkrovimas, kad būtų įkelta nauja buvimo būsena
+            st.rerun()  # Automatinis puslapio perkrovimas, kad būtų įkelta nauja būsena
         else:
             st.error("❌ Neteisingas prisijungimo vardas arba slaptažodis!")
 
-# Duomenų nuskaitymo funkcija su caching dekoratoriumi
-@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+# Duomenų nuskaitymo funkcija su naujuoju caching dekoratoriumi
+@st.cache_data
 def load_data(url):
     try:
         response = requests.get(url)
@@ -41,7 +41,6 @@ def load_data(url):
         st.error(f"❌ Klaida nuskaitant failą: {e}")
         return pd.DataFrame(columns=["Kiekis", "Prekė"])
 
-# Pagrindinė programos logika
 def main():
     st.title("📦 Užsakymų sistema")
     df = load_data(LIKUCIAI_URL)
@@ -58,7 +57,6 @@ def main():
     else:
         st.error("⚠️ Faile 'likučiai.xlsx' nėra tinkamų duomenų arba jis nepavyko nuskaityti.")
 
-# Tikriname, ar vartotojas prisijungęs, ir atitinkamai rodomas puslapis
 if "authenticated" not in st.session_state or not st.session_state.authenticated:
     login()
 else:
