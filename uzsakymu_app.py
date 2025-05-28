@@ -144,6 +144,7 @@ def main():
                 st.session_state["to_location"] = ""
                 st.session_state["notes"] = ""
                 
+                st.rerun()  # Perkrauna puslapį, kad išvalytų viską
             except Exception as e:
                 st.error(f"❌ Užsakymo išsiuntimas nepavyko: {e}")
     else:
