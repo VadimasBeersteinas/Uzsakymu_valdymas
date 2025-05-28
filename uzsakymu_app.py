@@ -1,50 +1,73 @@
 import streamlit as st
 import pandas as pd
 import requests
-import tempfile
 
 # GitHub CSV failo nuoroda
-LIKUCIAI_URL = "https://github.com/VadimasBeersteinas/Uzsakymu_valdymas/blob/main/likučiai.csv"
+LIKUCIAI_URL = "https://raw.githubusercontent.com/VadimasBeersteinas/Uzsakymu_valdymas/main/likučiai.csv"
 
-# Atsisiunčiame failą į laikiną vietą ir nuskaitome jį
-try:
-    response = requests.get(LIKUCIAI_URL)
-    response.raise_for_status()  # Patikrina, ar atsisiuntimas buvo sėkmingas
+def check_url(url):
+    """ Patikriname, ar failas egzistuoja GitHub. """
+    response = requests.get(url)
+    if response.status_code != 200:
+        st.error(f"❌ Nepavyko pasiekti CSV failo. HTTP statusas: {response.status_code}")
+        return False
+    return True
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as temp_file:
-        temp_file.write(response.content)
-        temp_path = temp_file.name
+@st.cache_data
+def load_data(url):
+    """ Nuskaito ir apdoroja CSV failą, pritaikant skyriklį ir kodavimą. """
+    if not check_url(url):
+        return pd.DataFrame(columns=["Kiekis", "Prekė"])
+    
+    try:
+        # Bandome įvairius nustatymus nuskaitymui
+        for encoding in ["utf-8", "utf-8-sig", "ISO-8859-1"]:
+            for sep in [",", ";", "\t"]:
+                try:
+                    df = pd.read_csv(url, encoding=encoding, sep=sep)
+                    if df.shape[1] == 2:  # Patikriname, ar yra tik 2 stulpeliai
+                        df.columns = ["Kiekis", "Prekė"]
+                        return df
+                except Exception:
+                    pass
+        
+        st.error("❌ Nepavyko tinkamai nuskaityti CSV failo. Patikrinkite skyriklį ir kodavimą.")
+        return pd.DataFrame(columns=["Kiekis", "Prekė"])
+    
+    except Exception as e:
+        st.error(f"❌ Klaida nuskaitant failą: {e}")
+        return pd.DataFrame(columns=["Kiekis", "Prekė"])
 
-    df = pd.read_csv(temp_path)
-    df.columns = ["Kiekis", "Prekė"]  # Užtikriname teisingus stulpelių pavadinimus
-except Exception as e:
-    st.error("❌ Klaida nuskaitant failą iš GitHub! Patikrinkite, ar nuoroda teisinga.")
+# Nuskaitome prekių likučius
+df = load_data(LIKUCIAI_URL)
 
 # Streamlit UI
 st.title("📦 Užsakymų sistema")
 
-# Pasirinkimo laukeliai
-selected_item = st.selectbox("Pasirinkite prekę", df["Prekė"].tolist())
-max_kiekis = int(df[df["Prekė"] == selected_item]["Kiekis"].values[0])
-selected_kiekis = st.number_input("Įveskite kiekį", min_value=1, max_value=max_kiekis)
+if df.empty:
+    st.warning("⚠️ Duomenų lentelė tuščia arba nepavyko nuskaityti failo!")
+else:
+    # Prekės pasirinkimas
+    selected_item = st.selectbox("Pasirinkite prekę", df["Prekė"].tolist())
+    max_kiekis = int(df[df["Prekė"] == selected_item]["Kiekis"].values[0])
+    selected_kiekis = st.number_input("Įveskite kiekį", min_value=1, max_value=max_kiekis)
 
-# Laikinas užsakymų sąrašas sesijoje
-if "orders" not in st.session_state:
-    st.session_state.orders = []
+    # Užsakymų saugojimas sesijoje
+    if "orders" not in st.session_state:
+        st.session_state.orders = []
 
-# Mygtukas pridėti prekę į sąrašą
-if st.button("➕ Pridėti"):
-    st.session_state.orders.append({"Prekė": selected_item, "Kiekis": selected_kiekis})
-    st.success(f"{selected_item} ({selected_kiekis} vnt.) pridėta!")
+    # Pridėti prekę
+    if st.button("➕ Pridėti"):
+        st.session_state.orders.append({"Prekė": selected_item, "Kiekis": selected_kiekis})
+        st.success(f"{selected_item} ({selected_kiekis} vnt.) pridėta!")
 
-# Rodomas pasirinktas prekių sąrašas
-if st.session_state.orders:
-    st.subheader("📋 Užsakytų prekių sąrašas")
-    st.table(pd.DataFrame(st.session_state.orders))
+    # Rodyti sąrašą
+    if st.session_state.orders:
+        st.subheader("📋 Užsakytų prekių sąrašas")
+        st.table(pd.DataFrame(st.session_state.orders))
 
-# Mygtukas pateikti užsakymą
-if st.button("✅ Pateikti užsakymą"):
-    st.subheader("✅ Užsakymas pateiktas!")
-    st.write("Toliau pateiktos užsakytos prekės:")
-    st.table(pd.DataFrame(st.session_state.orders))
-    st.session_state.orders = []  # Išvalome sąrašą po užsakymo
+    # Pateikti užsakymą
+    if st.button("✅ Pateikti užsakymą"):
+        st.subheader("✅ Užsakymas pateiktas!")
+        st.table(pd.DataFrame(st.session_state.orders))
+        st.session_state.orders = []
