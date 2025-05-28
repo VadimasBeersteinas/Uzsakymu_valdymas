@@ -10,7 +10,7 @@ LIKUCIAI_URL = "https://dl.dropboxusercontent.com/scl/fi/82mr72rih8bqjz33tm1he/l
 USERNAME = "MANIGA"
 PASSWORD = "Maniga_sirpučių"
 
-# Prisijungimo sistema
+# Prisijungimo funkcija su sesijos atnaujinimu
 def login():
     st.title("🔒 Prisijungimas")
     username = st.text_input("Vartotojo vardas")
@@ -19,11 +19,11 @@ def login():
     if st.button("✅ Prisijungti"):
         if username == USERNAME and password == PASSWORD:
             st.session_state.authenticated = True
-            st.success("✅ Prisijungimas sėkmingas! Sveiki, MANIGA!")
+            st.experimental_rerun()  # Pakeitimas: automatiškai atnaujina sesiją
         else:
             st.error("❌ Neteisingas prisijungimo vardas arba slaptažodis!")
 
-# Patikriname, ar vartotojas prisijungė
+# Tikriname, ar vartotojas prisijungęs
 if "authenticated" not in st.session_state or not st.session_state.authenticated:
     login()
 else:
