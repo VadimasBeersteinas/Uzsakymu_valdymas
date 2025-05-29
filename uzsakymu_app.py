@@ -135,15 +135,11 @@ def main():
 
         if st.button("✅ Pateikti užsakymą"):
             try:
-                send_order_via_email(st.session_state.orders, from_location, to_location, notes)
+                send_order_via_email(st.session_state.orders, st.session_state.from_location, st.session_state.to_location, st.session_state.notes)
                 st.success("Užsakymas sėkmingai išsiųstas į el. paštą!")
 
-                # Išvalyti laukus
-                st.session_state.orders = []
-                st.session_state["from_location"] = ""
-                st.session_state["to_location"] = ""
-                st.session_state["notes"] = ""
-
+                # Teisingai išvalyti sesijos reikšmes
+                st.session_state.clear()
                 st.rerun()
             except Exception as e:
                 st.error(f"❌ Užsakymo išsiuntimas nepavyko: {e}")
