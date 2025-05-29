@@ -138,8 +138,12 @@ def main():
                 send_order_via_email(st.session_state.orders, st.session_state.from_location, st.session_state.to_location, st.session_state.notes)
                 st.success("Užsakymas sėkmingai išsiųstas į el. paštą!")
 
-                # Teisingai išvalyti sesijos reikšmes
-                st.session_state.clear()
+                # Selektiškai išvalyti tik reikiamus laukus
+                st.session_state.orders = []
+                st.session_state.from_location = ""
+                st.session_state.to_location = ""
+                st.session_state.notes = ""
+
                 st.rerun()
             except Exception as e:
                 st.error(f"❌ Užsakymo išsiuntimas nepavyko: {e}")
